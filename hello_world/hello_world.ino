@@ -1,11 +1,6 @@
-const int COL1 = 3;     // Column #1 control
-const int LED = 25;     // 'row 1' led
-
-
 void setup() {  
-  Serial.begin(9600);
-  Serial.println("PUF is ready!");
-
+  Serial.begin(115200);
+  
   // start temerature sensor
   *(int*)(0x4000C000 + 0x0) = 0x1;
   delay(5000);

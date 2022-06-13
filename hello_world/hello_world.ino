@@ -11,13 +11,21 @@ void setup() {
   digitalWrite(COL1, LOW); 
    
   pinMode(LED, OUTPUT);   
+
+  // print temperature in °C to serial
+  Serial.println(*(int*)(0x4000C000 + 0x508));
+
+  // start getting SRAM memory values
+  int addy = 0x20000000;
+  while (addy < 0x40000000) // upper limit of memory addresses 
+  {
+    Serial.println(*(char*)addy);
+    addy += 0x4;
+    delay(10);
+  }
 }
 
 void loop(){
-  Serial.println("blink!");
-  
-  digitalWrite(LED, HIGH);
   delay(500);
-  digitalWrite(LED, LOW);
-  delay(500);
+  // 0x20000000 - 0x40000000
 }

@@ -1,31 +1,11 @@
+# Will Bourne 14/06/2022
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
+import time
 
-"""
-# data file locations
-data_files = ["data/mb1/datafile-b'26.25'-1.txt",
-              "data/mb1/datafile-b'26.25'-2.txt",
-              "data/mb1/datafile-b'26.00'-3.txt",
-              "data/mb1/datafile-b'25.00'-4.txt"]
-
-# read bytes from files
-byte_files, number_files = [], []
-for file_link in data_files:
-    with open(file_link, "rb") as file:
-        byte_files.append(file.read())
-
-        # represent each byte with a base-10 number between 0-255
-        number_files.append(np.array(list(byte_files[-1])))
-"""
-
-# TEST DATA
-data = np.array([[True, False, True, False, True, False],
-          [True, True, False, False, True, False],
-          [True, True, False, False, True, False]])
-
-
+start_time = time.time()
 def flatten(xss):
     return [x for xs in xss for x in xs]
 
@@ -57,14 +37,14 @@ def read_data(filenames):
     return np.reshape(byte_files, (len(filenames),-1))
 
 
-def plot_kde(number_files):
+def plot_kde(number_files, fname):
     # plot the frequency density of all numbers (1 byte, 0-255) stored in the SRAM
     sns.set_style('whitegrid')
     for numbers in number_files:
         sns.kdeplot(numbers)
         print(len(numbers))
     plt.legend(['1', '2', '3'])
-    plt.savefig("figs/sram-frequency-density.pdf")
+    plt.savefig("figs/{0}".format(fname))
 
     # find which numbers are different between runs on the same board
     mask = number_files[2] == number_files[1]
@@ -75,6 +55,7 @@ def hamming_distance(arr1, arr2):
     distance = np.sum(different_bits)
     return distance
 
+
 def hamming_distance_combinations(arr):
     hamming_distances = []
     # how many unique ways can we combine the datasets?
@@ -83,6 +64,10 @@ def hamming_distance_combinations(arr):
         hamming_distances.append(hamming_distance(data[combination[0],:], data[combination[1],:]))
 
     return hamming_distances, combinations
+
+
+def find_constant_bits(arr):
+    return np.sum(arr, axis=0) / len(arr[:,0])
 
 
 ## load datafiles into numpy array from files
@@ -99,16 +84,28 @@ data_files = ["data/mb3/data1 -29.bin",
               ]
 data = read_data(data_files)
 
+
 ## get hamming distances between 2 specifc RAM datasets
 # ham_dist = hamming_distance(data[0,:], data[1,:])
 # print("Hamming count: {0}, Hamming fraction: {1}% difference".format(ham_dist, round(100*ham_dist/len(data[0]), 2)))
 
 
 ## get hamming distances between every possible RAM data pair
-hamming_distances, combinations = hamming_distance_combinations(data[:5, :])
-save(hamming_distances, "temp/hamming_distances.npy")
-save(combinations, "temp/combinations.npy")
-print(hamming_distances, combinations)
+# hamming_distances, combinations = hamming_distance_combinations(data)
+# plt.hist(hamming_distances, bins=50)
+# plt.gca().set(title='Frequency Histogram', ylabel='Frequency');
+# plt.savefig("figs/intra_hamming_distances.pdf")
+
+## work out which bits change & which don't
+print(find_constant_bits(data[:,:50]))
+
+
+
+
+
+
+
+print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))
 
 
 

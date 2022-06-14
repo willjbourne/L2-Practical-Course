@@ -17,8 +17,8 @@ def save(data, file):
         np.save(f, data)
 
 def load(file):
-    with open(file, 'wb') as f:
-        return np.loaf(f)
+    with open(file, 'rb') as f:
+        return np.load(f,allow_pickle=True)
 
 
 def read_data(filenames):
@@ -63,7 +63,7 @@ def hamming_distance_combinations(arr):
     # how many unique ways can we combine the datasets?
     combinations = [list(comb) for comb in itertools.combinations(range(len(arr[:,0])), 2)]
     for combination in combinations:
-        hamming_distances.append(hamming_distance(data[combination[0],:], data[combination[1],:]))
+        hamming_distances.append(hamming_distance(arr[combination[0],:], arr[combination[1],:]))
 
     return hamming_distances, combinations
 
@@ -74,66 +74,72 @@ def find_constant_bits(arr):
     return bits_that_dont_change
 
 
+
+def inter_intra_mb_constant_bits(mb_list):
+    """ :param mb_list: list of all microbit data arrays
+        :return: mask of which bits are always constant across all microbits,
+                 array of masks of which bits are always constant across each microbits"""
+    # 1. work out which bits change & which don't between separate tests of the same microbit
+    mb_const_bits = []
+    for mb_data in mb_list:
+        mb_const_bits.append(find_constant_bits(mb_data))
+    mb_const_bits = np.array(mb_const_bits)
+    save(mb_const_bits, "temp/mb_const_bits.npy")
+
+    # 2. of the bits that don't change in each individual microbit, which remain constant across all the microbits?
+    global_const_bits = [np.sum(mb_const_bits, axis=0) == len(mb_const_bits)]
+    save(global_const_bits, "temp/global_const_bits.npy")
+
+    return global_const_bits, mb_const_bits
+
+
 ## load datafiles into numpy array from files
-dir = "data/mb1/"
-mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/mb1/"; mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/mb2/"; mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/mb3/"; mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/mb4/"; mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# save([mb1data, mb2data, mb3data, mb4data], "temp/mbdata.npy")
 
-dir = "data/mb2/"
-mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-
-dir = "data/mb3/"
-mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-
-dir = "data/mb4/"
-mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+## load datafiles into numpy array from pickle
+[mb1data, mb2data, mb3data, mb4data] = load("temp/mbdata.npy")
+print("data loaded in {0}s".format(round(time.time()-start_time, 2)))
 
 
-
-## get hamming distances between 2 specifc RAM datasets
+## get hamming distances between 2 specifc RAM datasets of mb2
 # ham_dist = hamming_distance(mb2data[0,:], mb2data[1,:])
 # print("Hamming count: {0}, Hamming fraction: {1}% difference".format(ham_dist, round(100*ham_dist/len(data[0]), 2)))
 
 
-## get hamming distances between every possible RAM data pair
+## get hamming distances between every possible RAM data pair for mb2
 # hamming_distances, combinations = hamming_distance_combinations(mb2data)
 # plt.hist(hamming_distances, bins=50)
 # sns.kdeplot(100*np.array(hamming_distances)/len(data[0]))
 # plt.savefig("figs/intra_hamming_distances_mb2.pdf")
 
 
-## work out which bits change & which don't
-# print(find_constant_bits(data[:,5000:5500]))
-
-# Which bits remain constant in microbit 1?
-mb1_const_bits = find_constant_bits(mb1data)
-save(mb1_const_bits, "temp/mb1_const_bits.npy")
-
-# Which bits remain constant in microbit 2?
-mb2_const_bits = find_constant_bits(mb2data)
-save(mb2_const_bits, "temp/mb2_const_bits.npy")
-
-# Which bits remain constant in microbit 3?
-mb3_const_bits = find_constant_bits(mb3data)
-save(mb3_const_bits, "temp/mb3_const_bits.npy")
-
-# Which bits remain constant in microbit 4?
-mb4_const_bits = find_constant_bits(mb4data)
-save(mb4_const_bits, "temp/mb4_const_bits.npy")
+## make a mask to find which bits never change across all microbits / each microbit
+## if all bits were random, there is a (1/2^29)*1048576 % chance that any constant bits are returned (very small!)
+# global_const_bits, mb_const_bits = inter_intra_mb_constant_bits([mb1data, mb2data, mb3data, mb4data])
+# print("constant bits in: mb1={0}, mb2={1}, mb3={2}, mb4={3}, globally={4}".format(*np.sum(mb_const_bits, axis=1),
+#                                                                                   np.sum(global_const_bits)))
 
 
-# of the bits that don't change in each individual microbit, which remain constant across all the microbits?
-# inter_mb_array = np.array([mb2_const_bits, mb3_const_bits, mb4_const_bits])
-# inter_mb_const_bits = find_constant_bits(inter_mb_array)
 
-# inter_mb_const_bits = mb2_const_bits & mb3_const_bits & mb4_const_bits
+# make a mask of bits that do change between microbits
+volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
-inter_mb_const_bits = np.bitwise_and(np.bitwise_and(np.bitwise_and(mb2_const_bits, mb3_const_bits), mb4_const_bits), mb1_const_bits)
-save(inter_mb_const_bits, "temp/inter_mb_const_bits.npy")
+# work out expected values for each bit in mb1
+expected_values_mb1 = np.sum(mb1data.astype(np.float), axis=0) / len(mb1data[:, 0])
 
-print("constant bits in mb1:", np.sum(mb1_const_bits))
-print("constant bits in mb2:", np.sum(mb2_const_bits))
-print("constant bits in mb3:", np.sum(mb3_const_bits))
-print("constant bits in mb4:", np.sum(mb4_const_bits))
-print("constant bits across all microbits: ", np.sum(inter_mb_const_bits))
+# find the difference between the volatile bits of the expected values and a correct trial dataset
+diffs = np.abs(mb1data[15,:] - expected_values_mb1)
+diffs = diffs[volatile_bits_mask]
+print("mb1 hamming dist. to mb1 exp. val.: {0} %".format(round(100*np.sum(diffs)/len(diffs))))
+
+# now find the difference between the volatile bits of the expected values and an incorrect trial dataset
+diffs = np.abs(mb2data[15,:] - expected_values_mb1)
+diffs = diffs[volatile_bits_mask]
+print("mb2 hamming dist. to mb1 exp. val.: {0} %".format(round(100*np.sum(diffs)/len(diffs))))
+
 
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

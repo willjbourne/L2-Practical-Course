@@ -75,13 +75,16 @@ def find_constant_bits(arr):
 
 
 ## load datafiles into numpy array from files
-dir = "test_data/mb2/"
+dir = "data/mb1/"
+mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+
+dir = "data/mb2/"
 mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 
-dir = "test_data/mb3/"
+dir = "data/mb3/"
 mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 
-dir = "test_data/mb4/"
+dir = "data/mb4/"
 mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 
 
@@ -101,21 +104,21 @@ mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 ## work out which bits change & which don't
 # print(find_constant_bits(data[:,5000:5500]))
 
+# Which bits remain constant in microbit 1?
+mb1_const_bits = find_constant_bits(mb1data)
+save(mb1_const_bits, "temp/mb1_const_bits.npy")
+
 # Which bits remain constant in microbit 2?
 mb2_const_bits = find_constant_bits(mb2data)
-save(mb2_const_bits, "temp/inter_mb_const_bits.npy")
+save(mb2_const_bits, "temp/mb2_const_bits.npy")
 
 # Which bits remain constant in microbit 3?
 mb3_const_bits = find_constant_bits(mb3data)
-save(mb3_const_bits, "temp/inter_mb_const_bits.npy")
+save(mb3_const_bits, "temp/mb3_const_bits.npy")
 
 # Which bits remain constant in microbit 4?
 mb4_const_bits = find_constant_bits(mb4data)
-save(mb4_const_bits, "temp/inter_mb_const_bits.npy")
-
-
-
-
+save(mb4_const_bits, "temp/mb4_const_bits.npy")
 
 
 # of the bits that don't change in each individual microbit, which remain constant across all the microbits?
@@ -124,16 +127,13 @@ save(mb4_const_bits, "temp/inter_mb_const_bits.npy")
 
 # inter_mb_const_bits = mb2_const_bits & mb3_const_bits & mb4_const_bits
 
-inter_mb_const_bits = np.bitwise_and(np.bitwise_and(mb2_const_bits, mb3_const_bits), mb4_const_bits)
-
+inter_mb_const_bits = np.bitwise_and(np.bitwise_and(np.bitwise_and(mb2_const_bits, mb3_const_bits), mb4_const_bits), mb1_const_bits)
 save(inter_mb_const_bits, "temp/inter_mb_const_bits.npy")
 
-
-print("constant bits in mb1:", np.sum(mb2_const_bits))
-print("constant bits in mb2:", np.sum(mb3_const_bits))
-print("constant bits in mb3:", np.sum(mb4_const_bits))
-print("constant bits across microbits:2, 3, 4: ", np.sum(inter_mb_const_bits))
-
-
+print("constant bits in mb1:", np.sum(mb1_const_bits))
+print("constant bits in mb2:", np.sum(mb2_const_bits))
+print("constant bits in mb3:", np.sum(mb3_const_bits))
+print("constant bits in mb4:", np.sum(mb4_const_bits))
+print("constant bits across all microbits: ", np.sum(inter_mb_const_bits))
 
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

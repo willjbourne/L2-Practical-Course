@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
 import time
+import os
+
 
 start_time = time.time()
 def flatten(xss):
@@ -67,21 +69,14 @@ def hamming_distance_combinations(arr):
 
 
 def find_constant_bits(arr):
-    return np.sum(arr, axis=0) / len(arr[:,0])
+    chance_bit_is_a_one = np.sum(arr.astype(np.float), axis=0) / len(arr[:,0])
+    bits_that_dont_change = [(chance_bit_is_a_one == 1) | (chance_bit_is_a_one == 0)]
+    return bits_that_dont_change
 
 
 ## load datafiles into numpy array from files
-data_files = ["data/mb3/data1 -29.bin",
-              "data/mb3/data2 -29.bin",
-              "data/mb3/data3 -29.bin",
-              "data/mb3/data4 -29.bin",
-              "data/mb3/data5 -29.bin",
-              "data/mb3/data6-29.bin",
-              "data/mb3/data7-29.bin",
-              "data/mb3/data8-29.bin",
-              "data/mb3/data9-29.bin",
-              "data/mb3/data10-29.bin"
-              ]
+dir = "data/mb2/"
+data_files = ["{0}{1}".format(dir, x) for x in os.listdir(dir)]
 data = read_data(data_files)
 
 
@@ -91,13 +86,13 @@ data = read_data(data_files)
 
 
 ## get hamming distances between every possible RAM data pair
-# hamming_distances, combinations = hamming_distance_combinations(data)
-# plt.hist(hamming_distances, bins=50)
-# plt.gca().set(title='Frequency Histogram', ylabel='Frequency');
-# plt.savefig("figs/intra_hamming_distances.pdf")
+hamming_distances, combinations = hamming_distance_combinations(data)
+plt.hist(hamming_distances, bins=50)
+plt.gca().set(title='Frequency Histogram', ylabel='Frequency');
+plt.savefig("figs/intra_hamming_distances_mb2.pdf")
 
 ## work out which bits change & which don't
-print(find_constant_bits(data[:,:50]))
+# print(find_constant_bits(data[:,5000:5500]))
 
 
 

@@ -5,5 +5,5 @@ temp = out(1:4);
 temp = typecast(uint8(temp), 'int32');
 t = temp / 4;
 f = fopen("data/mb3/data10 -" +  t + ".bin", "w");
-fwrite(f, out(4:size(out,2)));
+fwrite(f, out(5:size(out,2)));
 fclose(f);

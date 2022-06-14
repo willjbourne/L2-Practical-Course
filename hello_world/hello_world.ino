@@ -16,7 +16,7 @@ void setup() {
 
   // start getting SRAM memory values
   int addy = 0x20000000;
-  while (addy < 0x40000000) // upper limit of memory addresses 
+  while (addy < 0x20020000) // upper limit of memory addresses 
   {
     Serial.print(*(char*)addy);
     addy += 0x1;

@@ -21,6 +21,8 @@ void setup() {
     addy += 0x1;
     // delay(10);
   }
+
+  Serial.end();
 }
 
 void loop(){

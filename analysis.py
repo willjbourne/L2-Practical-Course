@@ -23,7 +23,7 @@ def load(file):
 
 def read_data(filenames):
     byte_files = np.array([], dtype=bool)
-    for file_link in data_files:
+    for file_link in filenames:
         with open(file_link, "rb") as file:
             # byte_files.append(list(file.read()))
             byte_file = []
@@ -75,25 +75,38 @@ def find_constant_bits(arr):
 
 
 ## load datafiles into numpy array from files
-dir = "data/mb2/"
-data_files = ["{0}{1}".format(dir, x) for x in os.listdir(dir)]
-data = read_data(data_files)
+dir = "test_data/mb2/"
+mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+
+dir = "test_data/mb3/"
+mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+
+dir = "test_data/mb4/"
+mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+
 
 
 ## get hamming distances between 2 specifc RAM datasets
-# ham_dist = hamming_distance(data[0,:], data[1,:])
+# ham_dist = hamming_distance(mb2data[0,:], mb2data[1,:])
 # print("Hamming count: {0}, Hamming fraction: {1}% difference".format(ham_dist, round(100*ham_dist/len(data[0]), 2)))
 
 
 ## get hamming distances between every possible RAM data pair
-hamming_distances, combinations = hamming_distance_combinations(data)
-plt.hist(hamming_distances, bins=50)
-plt.gca().set(title='Frequency Histogram', ylabel='Frequency');
-plt.savefig("figs/intra_hamming_distances_mb2.pdf")
+# hamming_distances, combinations = hamming_distance_combinations(mb2data)
+# plt.hist(hamming_distances, bins=50)
+# sns.kdeplot(100*np.array(hamming_distances)/len(data[0]))
+# plt.savefig("figs/intra_hamming_distances_mb2.pdf")
+
 
 ## work out which bits change & which don't
 # print(find_constant_bits(data[:,5000:5500]))
 
+
+# Which bits remain constant across all the microbits?
+inter_mb_array = np.concatenate((mb2data[0,:], mb3data[0,:], mb4data[0,:])).reshape((len(mb2data[0,:]), -1))
+inter_mb_const_bits = find_constant_bits(inter_mb_array)
+save(inter_mb_const_bits, "temp/inter_mb_const_bits.npy")
+print(np.sum(inter_mb_const_bits))
 
 
 

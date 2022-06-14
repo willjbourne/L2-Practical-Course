@@ -26,12 +26,26 @@ data = np.array([[True, False, True, False, True, False],
           [True, True, False, False, True, False]])
 
 
+def flatten(xss):
+    return [x for xs in xss for x in xs]
+
+
 def read_data(filenames):
-    byte_files = []
+    byte_files = np.array([], dtype=bool)
     for file_link in data_files:
         with open(file_link, "rb") as file:
-            byte_files.append(file.read())
-    return byte_files
+            # byte_files.append(list(file.read()))
+            byte_file = []
+            while byte := file.read(1):
+                byte_string = format(int.from_bytes(byte, "little"), '08b')
+                byte_file.extend(list(byte_string))
+            byte_file = np.array(byte_file).astype(np.int)
+
+            # byte_files.append(byte_file)
+
+            byte_files = np.concatenate((byte_files, byte_file))
+
+    return np.reshape(byte_files, (len(filenames),-1))
 
 
 def plot_kde(number_files):
@@ -63,15 +77,18 @@ def hamming_distance_combinations(arr):
 # ------
 
 data_files = ["data/mb3/data1 -28.bin",
-              "data/mb3/data2 -28.bin"]
+              "data/mb3/data2 -28.bin",
+              ]
 
 data = read_data(data_files)
 
-print(data)
+# print(data)
 
-# print(hamming_distance(data[0,:], data[1,:]))
+# ham_dist = hamming_distance(data[0,:], data[1,:])
+# print("Hamming count: {0}, Hamming fraction: {1}%".format(ham_dist, round(100*ham_dist/len(data[0]), 2)))
 
-# print(hamming_distance_combinations(data))
+
+print(hamming_distance_combinations(data))
 
 
 

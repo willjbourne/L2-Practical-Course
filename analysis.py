@@ -26,6 +26,14 @@ data = np.array([[True, False, True, False, True, False],
           [True, True, False, False, True, False]])
 
 
+def read_data(filenames):
+    byte_files = []
+    for file_link in data_files:
+        with open(file_link, "rb") as file:
+            byte_files.append(file.read())
+    return byte_files
+
+
 def plot_kde(number_files):
     # plot the frequency density of all numbers (1 byte, 0-255) stored in the SRAM
     sns.set_style('whitegrid')
@@ -45,10 +53,25 @@ def hamming_distance(arr1, arr2):
     return distance
 
 def hamming_distance_combinations(arr):
-    itertools.combinations('ABCD', 2)
+    hamming_distances = []
+    # how many unique ways can we combine the datasets?
+    combinations = [list(comb) for comb in itertools.combinations(range(len(arr[:,0])), 2)]
+    for combination in combinations:
+        hamming_distances.append(hamming_distance(combination[0], combination[1]))
+    return hamming_distances, combinations
 
+# ------
 
-print(hamming_distance(data[0,:], data[1,:]))
+data_files = ["data/mb3/data1 -28.bin",
+              "data/mb3/data2 -28.bin"]
+
+data = read_data(data_files)
+
+print(data)
+
+# print(hamming_distance(data[0,:], data[1,:]))
+
+# print(hamming_distance_combinations(data))
 
 
 

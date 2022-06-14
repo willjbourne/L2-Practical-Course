@@ -76,19 +76,27 @@ def hamming_distance_combinations(arr):
 
 # ------
 
-data_files = ["data/mb3/data1 -28.bin",
-              "data/mb3/data2 -28.bin",
+data_files = ["data/mb3/data1 -29.bin",
+              "data/mb3/data2 -29.bin",
+              "data/mb3/data3 -29.bin",
+              "data/mb3/data4 -29.bin",
+              "data/mb3/data5 -29.bin",
+              "data/mb3/data6-29.bin",
+              "data/mb3/data7-29.bin",
+              "data/mb3/data8-29.bin",
+              "data/mb3/data9-29.bin",
+              "data/mb3/data10-29.bin"
               ]
 
 data = read_data(data_files)
 
 # print(data)
 
-# ham_dist = hamming_distance(data[0,:], data[1,:])
-# print("Hamming count: {0}, Hamming fraction: {1}%".format(ham_dist, round(100*ham_dist/len(data[0]), 2)))
+ham_dist = hamming_distance(data[0,:], data[1,:])
+print("Hamming count: {0}, Hamming fraction: {1}%".format(ham_dist, round(100*ham_dist/len(data[0]), 2)))
 
 
-print(hamming_distance_combinations(data))
+# print(hamming_distance_combinations(data))
 
 
 

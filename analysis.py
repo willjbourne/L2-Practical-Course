@@ -124,11 +124,8 @@ print("data loaded in {0}s".format(round(time.time()-start_time, 2)))
 #                                                                                   np.sum(global_const_bits)))
 
 
-
-# make a mask of bits that do change between microbits
-volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
-
-# work out expected values for each bit in mb1
+## Hamming distance from expected value, only looking at the volatile bits
+volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1) # mask of bits that change between microbits
 expected_values_mb1 = np.sum(mb1data.astype(np.float), axis=0) / len(mb1data[:, 0])
 
 # find the difference between the volatile bits of the expected values and a correct trial dataset
@@ -141,5 +138,11 @@ diffs = np.abs(mb2data[15,:] - expected_values_mb1)
 diffs = diffs[volatile_bits_mask]
 print("mb2 hamming dist. to mb1 exp. val.: {0} %".format(round(100*np.sum(diffs)/len(diffs))))
 
+
+# could extend to exclude bits that are particuarly volative?
+
+sns.kdeplot(expected_values_mb1[volatile_bits_mask])
+sns.kdeplot(expected_values_mb1)
+plt.show()
 
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

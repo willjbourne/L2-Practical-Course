@@ -142,6 +142,19 @@ def calculate_mask(mbdata):
     mask = high_inter_volatility_test(intra_mask, mean_bit_values_inter)
     return mask
 
+def weighting(mbdata):
+    mean_bit_values = calculate_mean_bit_values(mbdata)
+    mean_bit_values_inter = calculate_inter_mean_bit_values(mean_bit_values)
+    weights = 1 - np.abs(mean_bit_values_inter - 0.5)
+    return weights
+
+def whd(data1, data2, weights):
+    different_bits = np.bitwise_xor(data1, data2)
+    weighted_bits = np.multiply(different_bits, weights)
+    distance = np.sum(weighted_bits)
+    return distance
+
+    
 
 ## load datafiles into numpy array from files
 # dir = "data/mb1/"; mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
@@ -212,16 +225,20 @@ plt.show()
 # here's implementation but not very fast, also not sure if correct method
 # the range of values accepted can be increased / decreased -> this has effect on the uniqueness of the sample if we accept too few values
 # it's important after making the mask that we test it on different microboards than the ones it was trained on, maybe get data from 4 more and use that for testing?
-mask = calculate_mask([mb1data, mb2data, mb3data])
+# mask = calculate_mask([mb1data, mb2data, mb3data])
 
-expected_values_mb4 = np.sum(mb4data.astype(np.float), axis=0) / len(mb4data[:, 0])
+# expected_values_mb4 = np.sum(mb4data.astype(np.float), axis=0) / len(mb4data[:, 0])
 
-mb4_dists = get_frac_hamming_distances(mb4data[:, mask], expected_values_mb4[mask])
-mb5_dists = get_frac_hamming_distances(mb5data[:, mask], expected_values_mb4[mask])
-print(mb4_dists)
-print(mb5_dists)
+# mb4_dists = get_frac_hamming_distances(mb4data[:, mask], expected_values_mb4[mask])
+# mb5_dists = get_frac_hamming_distances(mb5data[:, mask], expected_values_mb4[mask])
+# print(mb4_dists)
+# print(mb5_dists)
 
-# print(np.array(final_mask)[50000:51000])
-# print(mean_bit_values[:,final_mask].shape)
+weights = weighting([mb1data, mb2data, mb3data, mb4data, mb5data])
+distance = whd(mb1data[0, volatile_bits_mask], mb2data[0, volatile_bits_mask], weights[volatile_bits_mask])
+distance2 = hamming_distance(mb1data[0, volatile_bits_mask], mb2data[0, volatile_bits_mask])
+print(distance)
+print(distance2)
+
 
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

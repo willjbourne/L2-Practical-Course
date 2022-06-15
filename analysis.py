@@ -112,7 +112,7 @@ def calculate_inter_mean_bit_values(mean_bit_values):
     return np.sum(mean_bit_values, axis=0) / mean_bit_values.shape[0]
 
 def low_intra_volatility_test(mean_bit_values):
-    mask = [[], [], [], []]
+    mask = [[], [], []]
     for i in range(mean_bit_values.shape[1]):
         for j in range(mean_bit_values.shape[0]):
             if mean_bit_values[j, i] < 0.2 or mean_bit_values[j, i] > 0.8:
@@ -148,10 +148,11 @@ def calculate_mask(mbdata):
 # dir = "data/mb2/"; mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 # dir = "data/mb3/"; mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 # dir = "data/mb4/"; mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# save([mb1data, mb2data, mb3data, mb4data], "temp/mbdata.npy")
+# dir = "data/mb5/"; mb5data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# save([mb1data, mb2data, mb3data, mb4data, mb5data], "temp/mbdata.npy")
 
 ## load datafiles into numpy array from pickle
-[mb1data, mb2data, mb3data, mb4data] = load("temp/mbdata.npy")
+[mb1data, mb2data, mb3data, mb4data, mb5data] = load("temp/mbdata.npy")
 print("data loaded in {0}s".format(round(time.time()-start_time, 2)))
 
 
@@ -210,7 +211,15 @@ plt.show()
 
 # here's implementation but not very fast, also not sure if correct method
 # the range of values accepted can be increased / decreased -> this has effect on the uniqueness of the sample if we accept too few values
-mask = calculate_mask([mb1data, mb2data, mb3data, mb4data])
+# it's important after making the mask that we test it on different microboards than the ones it was trained on, maybe get data from 4 more and use that for testing?
+mask = calculate_mask([mb1data, mb2data, mb3data])
+
+expected_values_mb4 = np.sum(mb4data.astype(np.float), axis=0) / len(mb4data[:, 0])
+
+mb4_dists = get_frac_hamming_distances(mb4data[:, mask], expected_values_mb4[mask])
+mb5_dists = get_frac_hamming_distances(mb5data[:, mask], expected_values_mb4[mask])
+print(mb4_dists)
+print(mb5_dists)
 
 # print(np.array(final_mask)[50000:51000])
 # print(mean_bit_values[:,final_mask].shape)

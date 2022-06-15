@@ -93,6 +93,14 @@ def inter_intra_mb_constant_bits(mb_list):
     return global_const_bits, mb_const_bits
 
 
+def get_frac_hamming_distances(mbarr, exp_vals):
+    frac_hamming_dist = []
+    for mbdataset in mbarr:
+        diffs = np.abs(mbdataset - exp_vals)
+        frac_hamming_dist.append(np.sum(diffs))
+    return np.array(frac_hamming_dist, dtype=float)
+
+
 ## load datafiles into numpy array from files
 # dir = "data/mb1/"; mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 # dir = "data/mb2/"; mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
@@ -125,24 +133,32 @@ print("data loaded in {0}s".format(round(time.time()-start_time, 2)))
 
 
 ## Hamming distance from expected value, only looking at the volatile bits
+
+
 volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1) # mask of bits that change between microbits
+
+## work out the expected values for each bit on microbit 1
 expected_values_mb1 = np.sum(mb1data.astype(np.float), axis=0) / len(mb1data[:, 0])
 
-# find the difference between the volatile bits of the expected values and a correct trial dataset
-diffs = np.abs(mb1data[15,:] - expected_values_mb1)
-diffs = diffs[volatile_bits_mask]
-print("mb1 hamming dist. to mb1 exp. val.: {0} %".format(round(100*np.sum(diffs)/len(diffs))))
+## find the difference between the volatile bits of the expected values and a correct trial dataset
+mb1_dists = get_frac_hamming_distances(mb1data[:, volatile_bits_mask], expected_values_mb1[volatile_bits_mask])
 
-# now find the difference between the volatile bits of the expected values and an incorrect trial dataset
-diffs = np.abs(mb2data[15,:] - expected_values_mb1)
-diffs = diffs[volatile_bits_mask]
-print("mb2 hamming dist. to mb1 exp. val.: {0} %".format(round(100*np.sum(diffs)/len(diffs))))
+## find the difference between the volatile bits of the expected values and incorrect trial datasets
+mb2_dists = get_frac_hamming_distances(mb2data[:, volatile_bits_mask], expected_values_mb1[volatile_bits_mask])
+mb3_dists = get_frac_hamming_distances(mb3data[:, volatile_bits_mask], expected_values_mb1[volatile_bits_mask])
+mb4_dists = get_frac_hamming_distances(mb4data[:, volatile_bits_mask], expected_values_mb1[volatile_bits_mask])
+
+##  plot the hamming distances of all the microbits
+sns.kdeplot(100 * mb1_dists/len(mb1_dists))
+sns.kdeplot(100 * mb2_dists/len(mb1_dists))
+sns.kdeplot(100 * mb3_dists/len(mb1_dists))
+sns.kdeplot(100 * mb4_dists/len(mb1_dists))
+plt.legend(["microbit 1", "microbit 2","microbit 3","microbit 4"])
+plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
+plt.xlabel("hamming distance (%)")
+plt.show()
 
 
 # could extend to exclude bits that are particuarly volative?
-
-sns.kdeplot(expected_values_mb1[volatile_bits_mask])
-sns.kdeplot(expected_values_mb1)
-plt.show()
 
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

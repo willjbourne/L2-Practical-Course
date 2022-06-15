@@ -101,6 +101,48 @@ def get_frac_hamming_distances(mbarr, exp_vals):
     return np.array(frac_hamming_dist, dtype=float)
 
 
+# Louis functions
+def calculate_mean_bit_values(mbdata):
+    mean_bit_values = []
+    for mb in mbdata:
+        mean_bit_values.append(np.sum(mb[:, :], axis = 0) / mb[:, :].shape[0])
+    return np.array(mean_bit_values)
+
+def calculate_inter_mean_bit_values(mean_bit_values):
+    return np.sum(mean_bit_values, axis=0) / mean_bit_values.shape[0]
+
+def low_intra_volatility_test(mean_bit_values):
+    mask = [[], [], [], []]
+    for i in range(mean_bit_values.shape[1]):
+        for j in range(mean_bit_values.shape[0]):
+            if mean_bit_values[j, i] < 0.2 or mean_bit_values[j, i] > 0.8:
+                mask[j].append(True)
+            else:
+                mask[j].append(False)
+    mask = np.array(mask)
+    final_mask = np.empty(mask.shape[1], dtype=bool)
+    final_mask[:] = True
+    for i in range(mask.shape[1]):
+        for j in range(mask.shape[0]):
+            if mask[j, i] == False:
+                final_mask[i] = False    
+    return final_mask     
+
+def high_inter_volatility_test(intra_mask, mean_bit_values_inter):
+    mask = intra_mask
+    for i in range(mean_bit_values_inter.shape[0]):
+        if mean_bit_values_inter[i] < 0.3 or mean_bit_values_inter[i] > 0.7:
+            mask[i] = False
+    return mask 
+
+def calculate_mask(mbdata):
+    mean_bit_values = calculate_mean_bit_values(mbdata)
+    mean_bit_values_inter = calculate_inter_mean_bit_values(mean_bit_values)
+    intra_mask = low_intra_volatility_test(mean_bit_values)
+    mask = high_inter_volatility_test(intra_mask, mean_bit_values_inter)
+    return mask
+
+
 ## load datafiles into numpy array from files
 # dir = "data/mb1/"; mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 # dir = "data/mb2/"; mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
@@ -160,5 +202,17 @@ plt.show()
 
 
 # could extend to exclude bits that are particuarly volative?
+
+##  How to improve the filtering mask:
+#   take only the bits that have a low chance of changing intra, and a high chance of changing inter
+#   how?
+#   can sum the ith bit in the sequence and divide by how many sequences, close to 50 -> high chance of changing
+
+# here's implementation but not very fast, also not sure if correct method
+# the range of values accepted can be increased / decreased -> this has effect on the uniqueness of the sample if we accept too few values
+mask = calculate_mask([mb1data, mb2data, mb3data, mb4data])
+
+# print(np.array(final_mask)[50000:51000])
+# print(mean_bit_values[:,final_mask].shape)
 
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

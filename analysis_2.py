@@ -153,28 +153,41 @@ def PUF_train(trdata):
 def plot_distros(arrs, length=0):
     for arr in arrs:
         if length > 0:
-            sns.kdeplot(100 * mb2_dists / length)
+            sns.kdeplot(100 * arr / length)
         else:
-            sns.kdeplot(mb2_dists)
+            sns.kdeplot(arr)
     plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
     plt.xlabel("hamming distance (%)" if length > 0 else "hamming distance (total)")
     plt.show()
 
-## load data
-# read_data_from_files()
-[mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata], [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata]= load("temp/mbtrdata.npy"), load("temp/mbtedata.npy") # read data from pickle
+if __name__ == "__main__":
+    ## load data
+    # read_data_from_files()
+    [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata], [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata]= load("temp/mbtrdata.npy"), load("temp/mbtedata.npy") # read data from pickle
 
-# mask of all bits that do change between microbits
-volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
+    # mask of all bits that do change between microbits
+    volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
-# train the detector on a microbit
-rounded_exp_values_mb1, mb1_weightings, x = PUF_train(mb1trdata[:, volatile_bits_mask])
+    # train the detector on a microbit
+    rounded_exp_values_mb1, mb1_weightings, x = PUF_train(mb1trdata[:, volatile_bits_mask])
 
-# test a microbit to see if it is the same as the detected one
-mb2_dists = get_weighted_hamming_distances(mb2tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-print("This {0} the correct microbit".format("is" if np.mean(mb2_dists)<= x else "is not"))
+    # test a microbit to see if it is the same as the detected one
+    mb1_dists = get_weighted_hamming_distances(mb1tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+    print("mb1 {0} the microbit your are looking for".format("is" if np.mean(mb1_dists)<= x else "is not"))
 
-# plot the weighted hamming distances between the test microbit and expected values
-plot_distros([mb2_dists], mb2tedata.shape[1])
+    mb2_dists = get_weighted_hamming_distances(mb2tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+    print("mb2 {0} the microbit your are looking for".format("is" if np.mean(mb2_dists)<= x else "is not"))
 
-print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))
+    mb3_dists = get_weighted_hamming_distances(mb3tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+    print("mb3 {0} the microbit your are looking for".format("is" if np.mean(mb3_dists)<= x else "is not"))
+
+    mb4_dists = get_weighted_hamming_distances(mb4tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+    print("mb4 {0} the microbit your are looking for".format("is" if np.mean(mb4_dists)<= x else "is not"))
+
+    mb5_dists = get_weighted_hamming_distances(mb5tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+    print("mb5 {0} the microbit your are looking for".format("is" if np.mean(mb5_dists)<= x else "is not"))
+
+    # plot the weighted hamming distances between the test microbit and expected values
+    plot_distros([mb1_dists, mb2_dists, mb3_dists, mb4_dists, mb5_dists], mb2tedata.shape[1])
+
+    print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

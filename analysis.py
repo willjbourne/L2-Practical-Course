@@ -196,6 +196,14 @@ volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1) # mask of b
 ## work out the expected values for each bit on microbit 1
 expected_values_mb1 = np.sum(mb1data.astype(np.float), axis=0) / len(mb1data[:, 0])
 
+expected_values_mb2 = np.sum(mb2data.astype(np.float), axis=0) / len(mb2data[:, 0])
+
+expected_values_mb3 = np.sum(mb3data.astype(np.float), axis=0) / len(mb3data[:, 0])
+
+expected_values_mb4 = np.sum(mb4data.astype(np.float), axis=0) / len(mb4data[:, 0])
+
+expected_values_mb5 = np.sum(mb5data.astype(np.float), axis=0) / len(mb5data[:, 0])
+
 ## find the difference between the volatile bits of the expected values and a correct trial dataset
 mb1_dists = get_frac_hamming_distances(mb1data[:, volatile_bits_mask], expected_values_mb1[volatile_bits_mask])
 
@@ -204,15 +212,24 @@ mb2_dists = get_frac_hamming_distances(mb2data[:, volatile_bits_mask], expected_
 mb3_dists = get_frac_hamming_distances(mb3data[:, volatile_bits_mask], expected_values_mb1[volatile_bits_mask])
 mb4_dists = get_frac_hamming_distances(mb4data[:, volatile_bits_mask], expected_values_mb1[volatile_bits_mask])
 
-##  plot the hamming distances of all the microbits
-sns.kdeplot(100 * mb1_dists/len(mb1_dists))
-sns.kdeplot(100 * mb2_dists/len(mb1_dists))
-sns.kdeplot(100 * mb3_dists/len(mb1_dists))
-sns.kdeplot(100 * mb4_dists/len(mb1_dists))
-plt.legend(["microbit 1", "microbit 2","microbit 3","microbit 4"])
-plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
-plt.xlabel("hamming distance (%)")
-plt.show()
+mask = calculate_mask([mb1data, mb2data,mb3data])
+mean_bit_values = calculate_mean_bit_values([mb1data, mb2data, mb3data, mb4data, mb5data])
+dist = []
+print(mb4data[0].shape)
+for i in range(30):
+    dist.append(hamming_distance(mb3data[i, :], mb4data[i, :]))
+
+# sns.kdeplot(np.array(dist)/mb3data.shape[1])
+
+# ##  plot the hamming distances of all the microbits
+# # sns.kdeplot(100 * mb1_dists/len(mb1_dists))
+# # sns.kdeplot(100 * mb2_dists/len(mb1_dists))
+# # sns.kdeplot(100 * mb3_dists/len(mb1_dists))
+# # sns.kdeplot(100 * mb4_dists/len(mb1_dists))
+# plt.legend(["microbit 1", "microbit 2","microbit 3","microbit 4"])
+# plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
+# plt.xlabel("hamming distance (%)")
+# plt.savefig("figs/graph.png")
 
 
 # could extend to exclude bits that are particuarly volative?
@@ -233,6 +250,27 @@ plt.show()
 # mb5_dists = get_frac_hamming_distances(mb5data[:, mask], expected_values_mb4[mask])
 # print(mb4_dists)
 # print(mb5_dists)
+
+cmap = sns.diverging_palette(275, 275, l=80, s=80, as_cmap=True)
+
+expected_values = np.array([expected_values_mb1, expected_values_mb2, expected_values_mb3, expected_values_mb4, expected_values_mb5])
+perc = np.abs(expected_values - 0.5) * 200
+
+perc[:, ~volatile_bits_mask] = None;
+
+sns.heatmap(perc, cmap="viridis")
+plt.savefig("figs/test3.png")
+
+# dens = []
+# for i in range(volatile_bits_mask.shape[0] - 10):
+#     avg = 0
+#     for j in range(10):
+#         if volatile_bits_mask[i + j] == True:
+#             avg += 1
+#     dens.append(avg)
+
+# sns.heatmap(np.array(dens).reshape(8, -1))
+# plt.savefig("figs/test.png")
 
 weights = weighting([mb1data, mb2data, mb3data, mb4data, mb5data])
 distance = whd(mb1data[0, volatile_bits_mask], mb2data[0, volatile_bits_mask], weights[volatile_bits_mask])

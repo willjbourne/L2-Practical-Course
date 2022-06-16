@@ -173,21 +173,46 @@ if __name__ == "__main__":
 
     # test a microbit to see if it is the same as the detected one
     mb1_dists = get_weighted_hamming_distances(mb1tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    print("mb1 {0} the microbit your are looking for".format("is" if np.mean(mb1_dists)<= x else "is not"))
-
     mb2_dists = get_weighted_hamming_distances(mb2tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    print("mb2 {0} the microbit your are looking for".format("is" if np.mean(mb2_dists)<= x else "is not"))
-
     mb3_dists = get_weighted_hamming_distances(mb3tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    print("mb3 {0} the microbit your are looking for".format("is" if np.mean(mb3_dists)<= x else "is not"))
-
     mb4_dists = get_weighted_hamming_distances(mb4tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    print("mb4 {0} the microbit your are looking for".format("is" if np.mean(mb4_dists)<= x else "is not"))
-
     mb5_dists = get_weighted_hamming_distances(mb5tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    print("mb5 {0} the microbit your are looking for".format("is" if np.mean(mb5_dists)<= x else "is not"))
 
     # plot the weighted hamming distances between the test microbit and expected values
-    plot_distros([mb1_dists, mb2_dists, mb3_dists, mb4_dists, mb5_dists], mb2tedata.shape[1])
+    # plot_distros([mb1_dists, mb2_dists, mb3_dists, mb4_dists, mb5_dists], mb2tedata.shape[1])
+
+
+
+
+    # -------- NEW!
+    # heatmap of expected bit values
+
+    from functools import reduce
+
+    def factors(n):
+        return np.sort(list(reduce(list.__add__,
+                          ([i, n // i] for i in range(1, int(n ** 0.5) + 1) if n % i == 0))))
+
+
+    mb1_exp_bit_vals = np.sum(mb4trdata.astype(np.float), axis=0).reshape(1, -1) / len(mb1trdata[:, 0])
+
+    total_bits = mb1_exp_bit_vals.shape[1]
+    factor_list = factors(total_bits)
+    print("total bits:", total_bits, "\t num of factors: ", len(factor_list))
+
+    for factor in factor_list[:]:
+        image = mb1_exp_bit_vals.reshape(factor, -1)
+        fig, ax = plt.subplots()
+        im = plt.imshow(image, origin='upper',
+                        aspect=image.shape[1]/image.shape[0],
+                        cmap=plt.get_cmap('hot'),
+                        interpolation='nearest',
+                        vmin=0, vmax=1)
+
+        fig.colorbar(im)
+        plt.savefig("figs/chip_layouts/{0}-rows.png".format(factor))
+
+
+
 
     print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

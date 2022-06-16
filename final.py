@@ -176,8 +176,9 @@ def do_plots(dists):
 def plot_heatmap(exp_val, mask):
     perc = np.abs(exp_val - 0.5) * 200
     perc[:, ~mask] = None
-    sns.heatmap(perc, cmap="viridis")
-    plt.savefig("figs/heatmap.png")
+    sns.heatmap(perc, cmap="viridis", mask=np.repeat([~mask], perc.shape[0], axis=0))
+    plt.savefig("figs/heatmap.png", dpi=100)
+
     plt.clf()
 
 

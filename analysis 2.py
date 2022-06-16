@@ -7,11 +7,10 @@ import itertools
 import time
 import os
 
-
 start_time = time.time()
+
 def flatten(xss):
     return [x for xs in xss for x in xs]
-
 
 def save(data, file):
     with open(file, 'wb') as f:
@@ -107,23 +106,23 @@ def get_weighted_hamming_distances(mb_arrs, exp_arr, weightings):
     return np.array(frac_hamming_dists, dtype=float)
 
 
-## load datafiles into numpy array from files
-# dir = "tr_data/mb1/"; mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "tr_data/mb2/"; mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "tr_data/mb3/"; mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "tr_data/mb4/"; mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "tr_data/mb5/"; mb5data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+## load training datafiles into numpy array from files
+# dir = "data/train/mb1/"; mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/train/mb2/"; mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/train/mb3/"; mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/train/mb4/"; mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/train/mb5/"; mb5data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 # save([mb1data, mb2data, mb3data, mb4data, mb5data], "temp/mbtrdata.npy")
 
 ## load datafiles into numpy array from pickle
 [mb1data, mb2data, mb3data, mb4data, mb5data] = load("temp/mbtrdata.npy")
 
 ## load testing datafiles into numpy array from files
-# dir = "te_data/mb1/"; mb1tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "te_data/mb2/"; mb2tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "te_data/mb3/"; mb3tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "te_data/mb4/"; mb4tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "te_data/mb5/"; mb5tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/test/mb1/"; mb1tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/test/mb2/"; mb2tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/test/mb3/"; mb3tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/test/mb4/"; mb4tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+# dir = "data/test/mb5/"; mb5tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
 # save([mb1data, mb2data, mb3data, mb4data, mb5data], "temp/mbtedata.npy")
 
 ## load datafiles into numpy array from pickle

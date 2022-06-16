@@ -74,7 +74,6 @@ def find_constant_bits(arr):
     return bits_that_dont_change
 
 
-
 def inter_intra_mb_constant_bits(mb_list):
     """ :param mb_list: list of all microbit data arrays
         :return: mask of which bits are always constant across all 
@@ -99,60 +98,74 @@ def get_weighted_hamming_distances(mb_arrs, exp_arr, weightings):
     frac_hamming_dists = []
     for mb_arr in mb_arrs:
         different_bits = np.bitwise_xor(mb_arr.astype(bool), exp_arr.astype(bool))
-        # hamming_dist = np.sum(weightings[different_bits])
-        hamming_dist = np.sum(different_bits.astype(float))
+        hamming_dist = np.sum(weightings[different_bits])
+        # hamming_dist = np.sum(different_bits.astype(float))
 
         frac_hamming_dists.append(hamming_dist)
     return np.array(frac_hamming_dists, dtype=float)
 
 
-## load training datafiles into numpy array from files
-# dir = "data/train/mb1/"; mb1data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/train/mb2/"; mb2data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/train/mb3/"; mb3data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/train/mb4/"; mb4data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/train/mb5/"; mb5data = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# save([mb1data, mb2data, mb3data, mb4data, mb5data], "temp/mbtrdata.npy")
-
-## load datafiles into numpy array from pickle
-[mb1data, mb2data, mb3data, mb4data, mb5data] = load("temp/mbtrdata.npy")
-
-## load testing datafiles into numpy array from files
-# dir = "data/test/mb1/"; mb1tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/test/mb2/"; mb2tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/test/mb3/"; mb3tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/test/mb4/"; mb4tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# dir = "data/test/mb5/"; mb5tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
-# save([mb1data, mb2data, mb3data, mb4data, mb5data], "temp/mbtedata.npy")
-
-## load datafiles into numpy array from pickle
-[mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata] = load("temp/mbtedata.npy")
-print("data loaded in {0}s".format(round(time.time()-start_time, 2)))
+def get_expected_hamming_distance(mean_arr, weightings):
+    unexpected_bit_chance = mean_arr
+    unexpected_bit_chance[mean_arr>0.5] = 1 - mean_arr[mean_arr>0.5]
+    exp_hamming_dist = np.sum(weightings * unexpected_bit_chance)
+    return exp_hamming_dist
 
 
-## get hamming distances between 2 specifc RAM datasets of mb2
-# ham_dist = hamming_distance(mb2data[0,:], mb2data[1,:])
 
+###### RUN FUNCTIONS ######
+
+def read_data_from_files():
+    ## load training datafiles into numpy array from files
+    dir = "data/train/mb1/"; mb1trdata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/train/mb2/"; mb2trdata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/train/mb3/"; mb3trdata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/train/mb4/"; mb4trdata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/train/mb5/"; mb5trdata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    save([mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata], "temp/mbtrdata.npy")
+
+    ## load testing datafiles into numpy array from files
+    dir = "data/test/mb1/"; mb1tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/test/mb2/"; mb2tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/test/mb3/"; mb3tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/test/mb4/"; mb4tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    dir = "data/test/mb5/"; mb5tedata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
+    save([mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata], "temp/mbtedata.npy")
+
+    print("data loaded in {0}s".format(round(time.time() - start_time, 2)))
+
+
+
+## load data
+# read_data_from_files()
+[mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata], [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata]= load("temp/mbtrdata.npy"), load("temp/mbtedata.npy") # read data from pickle
 
 ## get hamming distances between every possible RAM data pair for mb2
 # hamming_distances, combinations = hamming_distance_combinations(mb2data)
 
-
-## make a mask to find which bits never change across all microbits / each microbit
-## if all bits were random, there is a (1/2^29)*1048576 % chance that any constant bits are returned (very small!)
+## make a mask to find which bits never change across all microbits
 # global_const_bits, mb_const_bits = inter_intra_mb_constant_bits([mb1data, mb2data, mb3data, mb4data])
-# print("constant bits in: mb1={0}, mb2={1}, mb3={2}, mb4={3}, globally={4}".format(*np.sum(mb_const_bits, axis=1),
-#                                                                                   np.sum(global_const_bits)))
 
 
 ## Hamming distance from expected value, only looking at the volatile bits
-
-
 volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1) # mask of bits that change between microbits
-## work out the expected values for each bit on microbit 1
-expected_values_mb1 = np.sum(mb1data.astype(np.float), axis=0) / len(mb1data[:, 0])
+
+## work out the expected values & weightings for each bit on microbit 1
+expected_values_mb1 = np.sum(mb1trdata.astype(np.float), axis=0) / len(mb1trdata[:, 0])
 rounded_exp_values_mb1 = np.round(expected_values_mb1)
 mb1_weightings = np.abs(0.5 - expected_values_mb1)*2 # x2 so weightings scale linearly between 0 & 1 (not necessary)
+
+## work out what the expected hamming distance is
+exp_hamming_dist = get_expected_hamming_distance(expected_values_mb1, mb1_weightings)
+print("{0}%".format(100 * exp_hamming_dist / mb3trdata[:, volatile_bits_mask].shape[1]))
+
+## work out the expected std for microbit 1
+mb1_tr_dists = get_weighted_hamming_distances(mb1trdata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
+mb1_exp_std = np.sqrt(np.sum((mb1_tr_dists - exp_hamming_dist)**2) / len(mb1_tr_dists)-1)
+Z = 3.4  # to give 99.97% certainty
+x = Z * mb1_exp_std + exp_hamming_dist
+print("CUTOFF: ", 100 * x / mb3trdata[:, volatile_bits_mask].shape[1])
+
 
 ## find the difference between the volatile bits of the expected values and a correct trial dataset
 mb1_dists = get_weighted_hamming_distances(mb1tedata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
@@ -163,15 +176,18 @@ mb3_dists = get_weighted_hamming_distances(mb3tedata[:, volatile_bits_mask], rou
 mb4_dists = get_weighted_hamming_distances(mb4tedata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
 
 ##  plot the hamming distances of all the microbits
-sns.kdeplot(100 * mb1_dists/mb3data[:, volatile_bits_mask].shape[1])
-sns.kdeplot(100 * mb2_dists/mb3data[:, volatile_bits_mask].shape[1])
-sns.kdeplot(100 * mb3_dists/mb3data[:, volatile_bits_mask].shape[1])
-sns.kdeplot(100 * mb4_dists/mb3data[:, volatile_bits_mask].shape[1])
+sns.kdeplot(100 * mb1_dists / mb3trdata[:, volatile_bits_mask].shape[1])
+sns.kdeplot(100 * mb2_dists / mb3trdata[:, volatile_bits_mask].shape[1])
+sns.kdeplot(100 * mb3_dists / mb3trdata[:, volatile_bits_mask].shape[1])
+sns.kdeplot(100 * mb4_dists / mb3trdata[:, volatile_bits_mask].shape[1])
 plt.legend(["microbit 1", "microbit 2","microbit 3","microbit 4"])
 plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
 plt.xlabel("hamming distance (%)")
 plt.show()
 
+## work out the standard deviation of the mb distibutions from the exp. hamming dist.
+for mb in [mb1_dists, mb2_dists, mb3_dists, mb4_dists]:
+    print(100 * (np.sqrt(np.sum((mb - exp_hamming_dist)**2) / len(mb)-1)) / mb3trdata[:, volatile_bits_mask].shape[1], "\n")
 
 # could extend to exclude bits that are particuarly volative?
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

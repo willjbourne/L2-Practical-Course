@@ -112,9 +112,6 @@ def get_expected_hamming_distance(mean_arr, weightings):
     return exp_hamming_dist
 
 
-
-###### RUN FUNCTIONS ######
-
 def read_data_from_files():
     ## load training datafiles into numpy array from files
     dir = "data/train/mb1/"; mb1trdata = read_data(["{0}{1}".format(dir, x) for x in os.listdir(dir)])
@@ -135,59 +132,49 @@ def read_data_from_files():
     print("data loaded in {0}s".format(round(time.time() - start_time, 2)))
 
 
+def PUF_train(trdata):
+    ## work out the expected values & weightings for each bit on microbit 1
+    expected_values = np.sum(trdata.astype(np.float), axis=0) / len(trdata[:, 0])
+    rounded_expec_vals = np.round(expected_values)
+    weightings = np.abs(0.5 - expected_values)*2 # x2 so weightings scale linearly between 0 & 1 (not necessary)
+
+    ## work out what the expected hamming distance is
+    exp_hamming_dist = get_expected_hamming_distance(expected_values, weightings)
+
+    ## work out the expected std for microbit 1
+    tr_dists = get_weighted_hamming_distances(trdata, rounded_expec_vals, weightings)
+    expec_std = np.sqrt(np.sum((tr_dists - exp_hamming_dist)**2) / len(tr_dists)-1)
+    Z = 3.4  # to give 99.97% certainty
+    x = Z * expec_std + exp_hamming_dist
+
+    return rounded_expec_vals, weightings, x
+
+
+def plot_distros(arrs, length=0):
+    for arr in arrs:
+        if length > 0:
+            sns.kdeplot(100 * mb2_dists / length)
+        else:
+            sns.kdeplot(mb2_dists)
+    plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
+    plt.xlabel("hamming distance (%)" if length > 0 else "hamming distance (total)")
+    plt.show()
 
 ## load data
 # read_data_from_files()
 [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata], [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata]= load("temp/mbtrdata.npy"), load("temp/mbtedata.npy") # read data from pickle
 
-## get hamming distances between every possible RAM data pair for mb2
-# hamming_distances, combinations = hamming_distance_combinations(mb2data)
+# mask of all bits that do change between microbits
+volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
-## make a mask to find which bits never change across all microbits
-# global_const_bits, mb_const_bits = inter_intra_mb_constant_bits([mb1data, mb2data, mb3data, mb4data])
+# train the detector on a microbit
+rounded_exp_values_mb1, mb1_weightings, x = PUF_train(mb1trdata[:, volatile_bits_mask])
 
+# test a microbit to see if it is the same as the detected one
+mb2_dists = get_weighted_hamming_distances(mb2tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+print("This {0} the correct microbit".format("is" if np.mean(mb2_dists)<= x else "is not"))
 
-## Hamming distance from expected value, only looking at the volatile bits
-volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1) # mask of bits that change between microbits
+# plot the weighted hamming distances between the test microbit and expected values
+plot_distros([mb2_dists], mb2tedata.shape[1])
 
-## work out the expected values & weightings for each bit on microbit 1
-expected_values_mb1 = np.sum(mb1trdata.astype(np.float), axis=0) / len(mb1trdata[:, 0])
-rounded_exp_values_mb1 = np.round(expected_values_mb1)
-mb1_weightings = np.abs(0.5 - expected_values_mb1)*2 # x2 so weightings scale linearly between 0 & 1 (not necessary)
-
-## work out what the expected hamming distance is
-exp_hamming_dist = get_expected_hamming_distance(expected_values_mb1, mb1_weightings)
-print("{0}%".format(100 * exp_hamming_dist / mb3trdata[:, volatile_bits_mask].shape[1]))
-
-## work out the expected std for microbit 1
-mb1_tr_dists = get_weighted_hamming_distances(mb1trdata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
-mb1_exp_std = np.sqrt(np.sum((mb1_tr_dists - exp_hamming_dist)**2) / len(mb1_tr_dists)-1)
-Z = 3.4  # to give 99.97% certainty
-x = Z * mb1_exp_std + exp_hamming_dist
-print("CUTOFF: ", 100 * x / mb3trdata[:, volatile_bits_mask].shape[1])
-
-
-## find the difference between the volatile bits of the expected values and a correct trial dataset
-mb1_dists = get_weighted_hamming_distances(mb1tedata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
-
-## find the difference between the volatile bits of the expected values and incorrect trial datasets
-mb2_dists = get_weighted_hamming_distances(mb2tedata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
-mb3_dists = get_weighted_hamming_distances(mb3tedata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
-mb4_dists = get_weighted_hamming_distances(mb4tedata[:, volatile_bits_mask], rounded_exp_values_mb1[volatile_bits_mask], mb1_weightings[volatile_bits_mask])
-
-##  plot the hamming distances of all the microbits
-sns.kdeplot(100 * mb1_dists / mb3trdata[:, volatile_bits_mask].shape[1])
-sns.kdeplot(100 * mb2_dists / mb3trdata[:, volatile_bits_mask].shape[1])
-sns.kdeplot(100 * mb3_dists / mb3trdata[:, volatile_bits_mask].shape[1])
-sns.kdeplot(100 * mb4_dists / mb3trdata[:, volatile_bits_mask].shape[1])
-plt.legend(["microbit 1", "microbit 2","microbit 3","microbit 4"])
-plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
-plt.xlabel("hamming distance (%)")
-plt.show()
-
-## work out the standard deviation of the mb distibutions from the exp. hamming dist.
-for mb in [mb1_dists, mb2_dists, mb3_dists, mb4_dists]:
-    print(100 * (np.sqrt(np.sum((mb - exp_hamming_dist)**2) / len(mb)-1)) / mb3trdata[:, volatile_bits_mask].shape[1], "\n")
-
-# could extend to exclude bits that are particuarly volative?
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

@@ -53,6 +53,17 @@ def read_data(filenames):
     return np.reshape(byte_files, (len(filenames),-1))
 
 
+def plot_hamming_dist_choices():
+    lengths = range(100)
+    combos = []
+    for l in lengths:
+        combos.append(len([list(comb) for comb in itertools.combinations(range(l), 2)]))
+    plt.plot(lengths, combos)
+    plt.xlabel("num. datasets")
+    plt.ylabel("num. hamming distances")
+    plt.savefig("figs/exponential hamming distances.pdf")
+
+
 def plot_kde(number_files, fname):
     # plot the frequency density of all numbers (1 byte, 0-255) stored in the SRAM
     sns.set_style('whitegrid')
@@ -171,15 +182,16 @@ def PUF_train(trdata):
     return rounded_expec_vals, weightings, x
 
 
-def density_plots(arrs, length=0):
+def density_plots(arrs, length=0, fname="figs/density_plots.png", i=1):
     for arr in arrs:
         if length > 0:
             sns.kdeplot(100 * arr / length)
         else:
             sns.kdeplot(arr)
-    plt.title("distribution of hamming distances between the expected values for mb1\nand all the microbits")
+    plt.title("distribution of hamming distances between the expected values for mb{0}\nand all the microbits".format(i))
     plt.xlabel("hamming distance (%)" if length > 0 else "hamming distance (total)")
-    plt.show()
+    plt.savefig(fname)
+    plt.clf()
 
 
 def chip_topology_plots(mbdata):
@@ -251,36 +263,37 @@ def chip_fingerprints(mbdatas):
 if __name__ == "__main__":
     ## load data
     # read_data_from_files()
-    read_full_data_from_files()
+    # read_full_data_from_files()
+    # print("data saved to pickle..")
 
-    print("data saved to pickle..")
     # [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle
     # [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata] = load("temp/mbtedata.npy")
 
-    mb_datas = load("temp/mbfull_data.npy")
+    all_mb_data = load("temp/mbfull_data.npy")
 
     # mask of all bits that do change between microbits
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
-    # train the detector on a microbit
-    rounded_exp_values_mb1, mb1_weightings, x = PUF_train(mb_datas[0][:, volatile_bits_mask])
+    for i in range(19):
+        # train the detector on a microbit
+        rounded_exp_values_mb1, mb1_weightings, x = PUF_train(all_mb_data[i][:, volatile_bits_mask])
 
-    # test a microbit to see if it is the same as the detected one
+        # get hamming distances for all the microbits
+        all_mb_dists = []
+        for mbtedata in all_mb_data:
+            mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+            all_mb_dists.append(mb_dists)
 
-    all_mb_dists = []
-    for mbtedata in mb_datas:
-        mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-        all_mb_dists.append(mb_dists)
+        ## plot the weighted hamming distances between the test microbit and expected values
+        density_plots(all_mb_dists, all_mb_data[0].shape[1], "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
+        print(i+1)
 
-
-    ## plot the weighted hamming distances between the test microbit and expected values
-    density_plots(all_mb_dists, mb_datas[0].shape[1])
 
     ## plot images of expected values for different chip layouts
     # chip_topology_plots(mb5trdata)
 
     ## plot the expected values for each of the microbits in the database linearly
-    # chip_fingerprints([mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata])
+    # chip_fingerprints(all_mb_data)
 
 
 

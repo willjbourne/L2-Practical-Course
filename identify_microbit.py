@@ -69,6 +69,3 @@ for tri in training_info_database: # [expected value arrays, weightings, x]
 
 if not found: print("microbit not recognised")
 print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))
-
-
-

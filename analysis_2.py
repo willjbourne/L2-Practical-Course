@@ -53,6 +53,17 @@ def read_data(filenames):
     return np.reshape(byte_files, (len(filenames),-1))
 
 
+def plot_hamming_dist_choices():
+    lengths = range(100)
+    combos = []
+    for l in lengths:
+        combos.append(len([list(comb) for comb in itertools.combinations(range(l), 2)]))
+    plt.plot(lengths, combos)
+    plt.xlabel("num. datasets")
+    plt.ylabel("num. hamming distances")
+    plt.savefig("figs/exponential hamming distances.pdf")
+
+
 def plot_kde(number_files, fname):
     # plot the frequency density of all numbers (1 byte, 0-255) stored in the SRAM
     sns.set_style('whitegrid')

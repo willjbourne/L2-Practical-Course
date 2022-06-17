@@ -6,8 +6,15 @@ import seaborn as sns
 import itertools
 import time
 import os
+import matplotlib as mpl
+from functools import reduce
 
 start_time = time.time()
+
+
+def factors(n):
+    return np.sort(list(reduce(list.__add__,
+                               ([i, n // i] for i in range(1, int(n ** 0.5) + 1) if n % i == 0))))
 
 def flatten(xss):
     return [x for xs in xss for x in xs]
@@ -150,7 +157,7 @@ def PUF_train(trdata):
     return rounded_expec_vals, weightings, x
 
 
-def plot_distros(arrs, length=0):
+def density_plots(arrs, length=0):
     for arr in arrs:
         if length > 0:
             sns.kdeplot(100 * arr / length)
@@ -160,10 +167,78 @@ def plot_distros(arrs, length=0):
     plt.xlabel("hamming distance (%)" if length > 0 else "hamming distance (total)")
     plt.show()
 
+
+def chip_topology_plots(mbdata):
+    mb_exp_bit_vals = np.sum(mbdata.astype(np.float), axis=0).reshape(1, -1) / len(mbdata[:, 0])
+    # mb_exp_bit_vals[:,~volatile_bits_mask] = None
+    total_bits = mb_exp_bit_vals.shape[1]
+    factor_list = factors(total_bits)
+    print("total bits:", total_bits, "\t num of factors: ", len(factor_list))
+
+    ## Plots
+    cdict1 = {'red': ((0.0, 0.0, 0.0),
+                      (0.5, 0.0, 0.1),
+                      (1.0, 1.0, 1.0)),
+
+              'green': ((0.0, 0.0, 0.0),
+                        (1.0, 0.0, 0.0)),
+
+              'blue': ((0.0, 0.0, 1.0),
+                       (0.5, 0.1, 0.0),
+                       (1.0, 0.0, 0.0))
+              }
+    blue_red1 = mpl.colors.LinearSegmentedColormap('BlueRed1', cdict1)
+    plt.rcParams['axes.facecolor'] = 'white'
+
+    for factor in factor_list[:]:
+        image = mb_exp_bit_vals.reshape(factor, -1)
+        fig, ax = plt.subplots()
+        im = plt.imshow(image, origin='upper',
+                        aspect=image.shape[1]/image.shape[0],
+                        cmap=plt.get_cmap(blue_red1),
+                        interpolation='nearest',
+                        vmin=0, vmax=1)
+        fig.colorbar(im)
+        plt.savefig("figs/chip_layouts/{0}-rows.png".format(factor))
+
+
+def chip_fingerprints(mbdatas):
+    fingerprint_arr = []
+    for mbdata in mbdatas:
+        mb_exp_bit_vals = np.sum(mbdata.astype(np.float), axis=0).reshape(1, -1) / len(mbdata[:, 0])
+        fingerprint_arr.append(mb_exp_bit_vals)
+    fingerprint_arr = np.array(fingerprint_arr).reshape(len(mbdatas), -1)
+
+    fingerprint_arr[:,~volatile_bits_mask] = None
+
+    ## Plots
+    cdict1 = {'red': ((0.0, 0.0, 0.0),
+                      (0.5, 0.0, 0.1),
+                      (1.0, 1.0, 1.0)),
+
+              'green': ((0.0, 0.0, 0.0),
+                        (1.0, 0.0, 0.0)),
+
+              'blue': ((0.0, 0.0, 1.0),
+                       (0.5, 0.1, 0.0),
+                       (1.0, 0.0, 0.0))
+              }
+    blue_red1 = mpl.colors.LinearSegmentedColormap('BlueRed1', cdict1)
+    plt.rcParams['axes.facecolor'] = 'white'
+    fig, ax = plt.subplots()
+    im = plt.imshow(fingerprint_arr, origin='upper',
+                    aspect=fingerprint_arr.shape[1]/len(mbdatas),
+                    cmap=plt.get_cmap(blue_red1),
+                    interpolation='nearest',
+                    vmin=0, vmax=1)
+    fig.colorbar(im)
+    plt.savefig("figs/fingerprints.png")
+
 if __name__ == "__main__":
     ## load data
     # read_data_from_files()
-    [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata], [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata]= load("temp/mbtrdata.npy"), load("temp/mbtedata.npy") # read data from pickle
+    [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle
+    [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata] = load("temp/mbtedata.npy")
 
     # mask of all bits that do change between microbits
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
@@ -178,42 +253,14 @@ if __name__ == "__main__":
     mb4_dists = get_weighted_hamming_distances(mb4tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
     mb5_dists = get_weighted_hamming_distances(mb5tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
 
-    # plot the weighted hamming distances between the test microbit and expected values
+    ## plot the weighted hamming distances between the test microbit and expected values
     # plot_distros([mb1_dists, mb2_dists, mb3_dists, mb4_dists, mb5_dists], mb2tedata.shape[1])
 
+    ## plot images of expected values for different chip layouts
+    # chip_topology_plots(mb1trdata)
 
-
-
-    # -------- NEW!
-    # heatmap of expected bit values
-
-    from functools import reduce
-
-    def factors(n):
-        return np.sort(list(reduce(list.__add__,
-                          ([i, n // i] for i in range(1, int(n ** 0.5) + 1) if n % i == 0))))
-
-
-    mb1_exp_bit_vals = np.sum(mb4trdata.astype(np.float), axis=0).reshape(1, -1) / len(mb1trdata[:, 0])
-    mb1_exp_bit_vals[:,~volatile_bits_mask] = None
-    total_bits = mb1_exp_bit_vals.shape[1]
-    factor_list = factors(total_bits)
-    print("total bits:", total_bits, "\t num of factors: ", len(factor_list))
-
-    plt.rcParams['axes.facecolor'] = 'black'
-
-    for factor in factor_list[:]:
-        image = mb1_exp_bit_vals.reshape(factor, -1)
-        fig, ax = plt.subplots()
-        im = plt.imshow(image, origin='upper',
-                        aspect=image.shape[1]/image.shape[0],
-                        cmap=plt.get_cmap('PiYG'),
-                        interpolation='nearest',
-                        vmin=0, vmax=1)
-
-        fig.colorbar(im)
-        plt.savefig("figs/chip_layouts/{0}-rows.png".format(factor))
-
+    ## plot the expected values for each of the microbits in the database linearly
+    chip_fingerprints([mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata])
 
 
 

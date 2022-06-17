@@ -264,7 +264,7 @@ def chip_fingerprints(mbdatas):
 if __name__ == "__main__":
     ## load data
     # read_data_from_files()
-    read_full_data_from_files()
+    # read_full_data_from_files()
     # print("data saved to pickle..")
 
     # [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle

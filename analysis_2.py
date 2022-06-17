@@ -264,7 +264,7 @@ def chip_fingerprints(mbdatas):
 if __name__ == "__main__":
     ## load data
     # read_data_from_files()
-    # read_full_data_from_files()
+    read_full_data_from_files()
     # print("data saved to pickle..")
 
     # [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle
@@ -284,17 +284,17 @@ if __name__ == "__main__":
         all_mb_dists = []
         for mbtedata in all_mb_data:
             mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+
             all_mb_dists.append(mb_dists)
 
         ## plot the weighted hamming distances between the test microbit and expected values
-        # density_plots(all_mb_dists, all_mb_data[0].shape[1], "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
-
+        density_plots(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
 
 
         ## plot images of expected values for different chip layouts
-        try: os.mkdir("figs/chip_layouts/mb{0}_chip_layouts".format(i+1))
-        except: pass
-        chip_topology_plots(all_mb_data[i], dir="figs/chip_layouts/mb{0}_chip_layouts".format(i+1), rl = 16384)
+        # try: os.mkdir("figs/chip_layouts/mb{0}_chip_layouts".format(i+1))
+        # except: pass
+        # chip_topology_plots(all_mb_data[i], dir="figs/chip_layouts/mb{0}_chip_layouts".format(i+1), rl = 16384)
 
     ## plot the expected values for each of the microbits in the database linearly
     # chip_fingerprints(all_mb_data)

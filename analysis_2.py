@@ -264,7 +264,7 @@ def chip_fingerprints(mbdatas):
 if __name__ == "__main__":
     ## load data
     # read_data_from_files()
-    read_full_data_from_files()
+    # read_full_data_from_files()
     # read_full_data_from_files()
     # print("data saved to pickle..")
 

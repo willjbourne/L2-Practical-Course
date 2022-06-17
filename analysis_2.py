@@ -8,6 +8,7 @@ import time
 import os
 import matplotlib as mpl
 from functools import reduce
+from scipy.stats import norm
 
 start_time = time.time()
 
@@ -194,6 +195,34 @@ def density_plots(arrs, length=0, fname="figs/density_plots.png", i=1):
     plt.clf()
 
 
+def inter_chip_ham_dists(arrs, length=0, fname="figs/inter_chip_hamming_plots.png", i=1):
+    hamming_dists = []
+    for arr in arrs:
+        if length > 0:
+            hamming_dists.append(np.mean(100 * arr / length))
+        else:
+            hamming_dists.append(np.sum(arr))
+    del hamming_dists[i - 1]
+    # get normal distribution
+    mu, std = norm.fit(hamming_dists)
+
+    # Plot the histogram.
+    plt.hist(hamming_dists, density=True, alpha=0.6, color='orange')
+    sns.kdeplot(hamming_dists)
+    # Plot the PDF.
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 100)
+    p = norm.pdf(x, mu, std)
+
+    plt.plot(x, p, 'k', linewidth=2)
+    title = "Fit Values: {:.2f} and {:.2f}".format(mu, std)
+    plt.title(title)
+    # plt.title("distribution of hamming distances between the expected values for mb{0}\nand the other microbits".format(i))
+    plt.xlabel("inter-chip hamming distance (%)" if length > 0 else "hamming distance (total)")
+    plt.savefig(fname)
+    plt.clf()
+
+
 def chip_topology_plots(mbdata, dir="figs/chip_layouts", rl=0):
     mb_exp_bit_vals = np.sum(mbdata.astype(np.float), axis=0).reshape(1, -1) / len(mbdata[:, 0])
     # mb_exp_bit_vals[:,~volatile_bits_mask] = None
@@ -291,6 +320,7 @@ if __name__ == "__main__":
         ## plot the weighted hamming distances between the test microbit and expected values
         density_plots(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
 
+        inter_chip_ham_dists(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/inter_hamming_plots/base_mb_{0}.png".format(i+1), i+1)
 
         ## plot images of expected values for different chip layouts
         # try: os.mkdir("figs/chip_layouts/mb{0}_chip_layouts".format(i+1))

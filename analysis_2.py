@@ -343,7 +343,7 @@ if __name__ == "__main__":
     ## load data
     # read_data_from_files()
     # read_full_data_from_files()
-    read_full_data_from_files()
+    # read_full_data_from_files()
     # print("data saved to pickle..")
 
     # [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     # mask of all bits that do change between microbits
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
-    for i in range(20):
+    for i in range(len(all_mb_data)):
         print("mb {0} started..".format(i + 1))
         # train the detector on a microbit
         rounded_exp_values_mb1, mb1_weightings, x = PUF_train(all_mb_data[i][:, volatile_bits_mask])

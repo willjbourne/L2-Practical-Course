@@ -27,6 +27,13 @@ def load(file):
     with open(file, 'rb') as f:
         return np.load(f,allow_pickle=True)
 
+def listdirs(rootdir):
+    dirs = []
+    for file in os.listdir(rootdir):
+        d = os.path.join(rootdir, file)
+        if os.path.isdir(d): dirs.append(d)
+    return dirs
+
 
 def read_data(filenames):
     byte_files = np.array([], dtype=bool)
@@ -139,6 +146,13 @@ def read_data_from_files():
     print("data loaded in {0}s".format(round(time.time() - start_time, 2)))
 
 
+def read_full_data_from_files():
+    mb_datas = []
+    for mb_link in listdirs("data/full"):
+        mb_datas.append(read_data(["{0}/{1}".format(mb_link, x) for x in os.listdir(mb_link) if not x.startswith('.')]))
+    save(mb_datas, "temp/mbfull_data.npy")
+
+
 def PUF_train(trdata):
     ## work out the expected values & weightings for each bit on microbit 1
     expected_values = np.sum(trdata.astype(np.float), axis=0) / len(trdata[:, 0])
@@ -237,27 +251,33 @@ def chip_fingerprints(mbdatas):
 if __name__ == "__main__":
     ## load data
     # read_data_from_files()
-    [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle
-    [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata] = load("temp/mbtedata.npy")
+    read_full_data_from_files()
+
+    print("data saved to pickle..")
+    # [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle
+    # [mb1tedata, mb2tedata, mb3tedata, mb4tedata, mb5tedata] = load("temp/mbtedata.npy")
+
+    mb_datas = load("temp/mbfull_data.npy")
 
     # mask of all bits that do change between microbits
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
     # train the detector on a microbit
-    rounded_exp_values_mb1, mb1_weightings, x = PUF_train(mb1trdata[:, volatile_bits_mask])
+    rounded_exp_values_mb1, mb1_weightings, x = PUF_train(mb_datas[0][:, volatile_bits_mask])
 
     # test a microbit to see if it is the same as the detected one
-    mb1_dists = get_weighted_hamming_distances(mb1tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    mb2_dists = get_weighted_hamming_distances(mb2tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    mb3_dists = get_weighted_hamming_distances(mb3tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    mb4_dists = get_weighted_hamming_distances(mb4tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
-    mb5_dists = get_weighted_hamming_distances(mb5tedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+
+    all_mb_dists = []
+    for mbtedata in mb_datas:
+        mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+        all_mb_dists.append(mb_dists)
+
 
     ## plot the weighted hamming distances between the test microbit and expected values
-    # plot_distros([mb1_dists, mb2_dists, mb3_dists, mb4_dists, mb5_dists], mb2tedata.shape[1])
+    density_plots(all_mb_dists, mb_datas[0].shape[1])
 
     ## plot images of expected values for different chip layouts
-    chip_topology_plots(mb5trdata)
+    # chip_topology_plots(mb5trdata)
 
     ## plot the expected values for each of the microbits in the database linearly
     # chip_fingerprints([mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata])

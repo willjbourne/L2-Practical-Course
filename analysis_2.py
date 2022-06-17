@@ -195,17 +195,19 @@ if __name__ == "__main__":
 
 
     mb1_exp_bit_vals = np.sum(mb4trdata.astype(np.float), axis=0).reshape(1, -1) / len(mb1trdata[:, 0])
-
+    mb1_exp_bit_vals[:,~volatile_bits_mask] = None
     total_bits = mb1_exp_bit_vals.shape[1]
     factor_list = factors(total_bits)
     print("total bits:", total_bits, "\t num of factors: ", len(factor_list))
+
+    plt.rcParams['axes.facecolor'] = 'black'
 
     for factor in factor_list[:]:
         image = mb1_exp_bit_vals.reshape(factor, -1)
         fig, ax = plt.subplots()
         im = plt.imshow(image, origin='upper',
                         aspect=image.shape[1]/image.shape[0],
-                        cmap=plt.get_cmap('hot'),
+                        cmap=plt.get_cmap('PiYG'),
                         interpolation='nearest',
                         vmin=0, vmax=1)
 

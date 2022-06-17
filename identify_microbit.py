@@ -60,8 +60,10 @@ for tri in training_info_database: # [expected value arrays, weightings, x]
     mbq_dists = analysis.get_weighted_hamming_distances(mbq[:, volatile_bits_mask], tri[0], tri[1]) # expected value arrays, weightings
     if np.mean(mbq_dists) <= tri[2]: # tri[2]: x
         correct_mb_str = [f for f in os.listdir("data/mb_database") if not f.startswith('.')][i]
-        analysis.density_plots([mbq_dists], query_data.shape[1])
-        print("microbit linked to fingerprint: {0}".format(correct_mb_str))
+
+        print("microbit linked to fingerprint: {0}\n"
+              "hamming distance(s): {1}\n"
+              "x: {2}".format(correct_mb_str, np.round(mbq_dists), round(tri[2])))
         found = True
     i += 1
 

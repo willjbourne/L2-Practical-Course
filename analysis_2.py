@@ -257,10 +257,10 @@ if __name__ == "__main__":
     # plot_distros([mb1_dists, mb2_dists, mb3_dists, mb4_dists, mb5_dists], mb2tedata.shape[1])
 
     ## plot images of expected values for different chip layouts
-    # chip_topology_plots(mb1trdata)
+    chip_topology_plots(mb5trdata)
 
     ## plot the expected values for each of the microbits in the database linearly
-    chip_fingerprints([mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata])
+    # chip_fingerprints([mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata])
 
 
 

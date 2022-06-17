@@ -8,7 +8,7 @@ t = temp / 4;
 
 % delete("data/mb_query/*.bin");
 % mb 4 data 5
-f = fopen("data/full/mb21/data5-" +  t + ".bin", "w");
+f = fopen("data/full/mb21/data4-" +  t + ".bin", "w");
 % f = fopen("data/mb_query/dataq-" +  t + ".bin", "w");
 fwrite(f, out(5:size(out,2)));
 fclose(f);

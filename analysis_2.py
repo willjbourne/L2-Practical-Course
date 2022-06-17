@@ -274,7 +274,7 @@ if __name__ == "__main__":
     # mask of all bits that do change between microbits
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
-    for i in range(19):
+    for i in range(20):
         # train the detector on a microbit
         rounded_exp_values_mb1, mb1_weightings, x = PUF_train(all_mb_data[i][:, volatile_bits_mask])
 
@@ -284,8 +284,10 @@ if __name__ == "__main__":
             mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
             all_mb_dists.append(mb_dists)
 
+        print(all_mb_dists[3])
+
         ## plot the weighted hamming distances between the test microbit and expected values
-        density_plots(all_mb_dists, all_mb_data[0].shape[1], "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
+        density_plots(all_mb_dists, len(volatile_bits_mask[volatile_bits_mask==True]), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
         print(i+1)
 
 

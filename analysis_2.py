@@ -264,6 +264,7 @@ def chip_fingerprints(mbdatas):
 if __name__ == "__main__":
     ## load data
     # read_data_from_files()
+    read_full_data_from_files()
     # read_full_data_from_files()
     # print("data saved to pickle..")
 
@@ -276,10 +277,7 @@ if __name__ == "__main__":
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
     for i in range(20):
-<<<<<<< HEAD
-=======
         print("mb {0} started..".format(i + 1))
->>>>>>> 23256065ac8c5dc2b846aad8cf121557e21efbb6
         # train the detector on a microbit
         rounded_exp_values_mb1, mb1_weightings, x = PUF_train(all_mb_data[i][:, volatile_bits_mask])
 
@@ -290,15 +288,8 @@ if __name__ == "__main__":
 
             all_mb_dists.append(mb_dists)
 
-        print(all_mb_dists[3])
-
         ## plot the weighted hamming distances between the test microbit and expected values
-<<<<<<< HEAD
-        density_plots(all_mb_dists, len(volatile_bits_mask[volatile_bits_mask==True]), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
-        print(i+1)
-=======
         density_plots(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
->>>>>>> 23256065ac8c5dc2b846aad8cf121557e21efbb6
 
 
         ## plot images of expected values for different chip layouts

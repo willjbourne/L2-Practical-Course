@@ -223,6 +223,55 @@ def inter_chip_ham_dists(arrs, length=0, fname="figs/inter_chip_hamming_plots.pn
     plt.clf()
 
 
+def inter_intra_chip_ham_dists(inter_arrs, length=0, fname="figs/inter_chip_hamming_plots.png", i=1):
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    plt.xlabel("inter-chip hamming distance (%)")
+
+    intra_dists = 100 * inter_arrs[i-1] / length
+    hamming_dists = []
+    for arr in inter_arrs:
+        if length > 0:
+            hamming_dists.append(np.mean(100 * arr / length))
+        else:
+            hamming_dists.append(np.sum(arr))
+    del hamming_dists[i - 1]
+
+    # normal distributions
+    intra_mu, intra_std = norm.fit(intra_dists)
+    inter_mu, inter_std = norm.fit(hamming_dists)
+
+    # Plot the histograms
+
+
+
+    ax1.hist(intra_dists, density=True, alpha=0.6, color='red')
+    ax2.hist(hamming_dists, density=True, alpha=0.6, color='red')
+
+    # Plot KDE's
+    sns.kdeplot(intra_dists, color='blue', ax=ax1)
+    sns.kdeplot(hamming_dists, color='blue', ax=ax2)
+
+
+    # Plot the PDF.
+    xmin, xmax = plt.xlim()
+    x1 = np.linspace(*ax1.get_xlim(), 100)
+    x2 = np.linspace(*ax2.get_xlim(), 100)
+    ax1.plot(x1, norm.pdf(x1, intra_mu, intra_std), 'k', linewidth=2, color='green')
+    ax2.plot(x2, norm.pdf(x2, inter_mu, inter_std), 'k', linewidth=2, color='green')
+
+    title = "Fit Values: {:.2f} and {:.2f}".format(inter_mu, inter_std)
+    plt.title(title)
+    # plt.title("distribution of hamming distances between the expected values for mb{0}\nand the other microbits".format(i))
+
+    ax1.set_title('intra-chip hamming distance')
+    ax2.set_title('inter-chip hamming distance')
+
+    plt.tight_layout()
+
+    plt.savefig(fname)
+    plt.clf()
+
+
 def chip_topology_plots(mbdata, dir="figs/chip_layouts", rl=0):
     mb_exp_bit_vals = np.sum(mbdata.astype(np.float), axis=0).reshape(1, -1) / len(mbdata[:, 0])
     # mb_exp_bit_vals[:,~volatile_bits_mask] = None
@@ -294,7 +343,7 @@ if __name__ == "__main__":
     ## load data
     # read_data_from_files()
     # read_full_data_from_files()
-    # read_full_data_from_files()
+    read_full_data_from_files()
     # print("data saved to pickle..")
 
     # [mb1trdata, mb2trdata, mb3trdata, mb4trdata, mb5trdata]= load("temp/mbtrdata.npy") # read data from pickle
@@ -320,7 +369,7 @@ if __name__ == "__main__":
         ## plot the weighted hamming distances between the test microbit and expected values
         density_plots(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
 
-        inter_chip_ham_dists(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/inter_hamming_plots/base_mb_{0}.png".format(i+1), i+1)
+        inter_intra_chip_ham_dists(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/inter_hamming_plots/base_mb_{0}.png".format(i+1), i+1)
 
         ## plot images of expected values for different chip layouts
         # try: os.mkdir("figs/chip_layouts/mb{0}_chip_layouts".format(i+1))

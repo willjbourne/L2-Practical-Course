@@ -159,7 +159,7 @@ def get_weighted_dist_for_all(tr_data, te_data, mask):
         for data in te_data:
             temp.append(get_weighted_hamming_distances(data[:, mask], round_exp_val[i, mask], weightings[i, mask]))
         dists.append(temp)
-    dists_percent = 100 * np.array(dists) / len(tr_data[0][:, 0])
+    dists_percent = 100 * np.array(dists) / len(mask[mask == True])
     return dists, dists_percent
 
 def do_plots(dists):
@@ -168,15 +168,15 @@ def do_plots(dists):
         legend = []
         for j in range(dists.shape[1]):
             sns.kdeplot(dists[i][j])
-            legend.append("microbit {0}".format(j))
+            legend.append("microbit {0}".format(j + 1))
         plt.legend(legend)
-        plt.savefig("figs/fig{0}.png".format(i))
+        plt.savefig("figs/fig{0}.png".format(i + 1))
         plt.clf()
 
 def plot_heatmap(exp_val, mask):
     perc = np.abs(exp_val - 0.5) * 200
     perc[:, ~mask] = None
-    sns.heatmap(perc, cmap="viridis")
+    plt.imshow(perc, cmap="viridis")
     plt.savefig("figs/heatmap.png")
     plt.clf()
 
@@ -197,5 +197,5 @@ weightings = get_weightings(exp_val)
 
 mb1_dists = get_weighted_hamming_distances(mb1tedata[:, volatile_bits_mask], round_exp_val[0, volatile_bits_mask], weightings[0, volatile_bits_mask])
 dists, dists_percent = get_weighted_dist_for_all(tr_data, te_data, volatile_bits_mask)
-do_plots(dists)
+do_plots(dists_percent)
 plot_heatmap(exp_val, volatile_bits_mask)

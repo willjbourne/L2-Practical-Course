@@ -1,4 +1,4 @@
-device = serialport("COM13", 115200);
+device = serialport("COM18", 115200);
 device.Timeout = 5;
 out = read(device, 999999, 'uint8');
 temp = out(1:4);
@@ -8,7 +8,7 @@ t = temp / 4;
 
 % delete("data/mb_query/*.bin");
 % mb 4 data 5
-f = fopen("data/full/mb21/data4-" +  t + ".bin", "w");
+f = fopen("data/full/mb26/data3-" +  t + ".bin", "w");
 % f = fopen("data/mb_query/dataq-" +  t + ".bin", "w");
 fwrite(f, out(5:size(out,2)));
 fclose(f);

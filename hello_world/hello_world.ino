@@ -4,7 +4,7 @@ void setup() {
   // start temerature sensor
   *(int*)(0x4000C000 + 0x0) = 0x1;
   delay(5000);
-
+  
   // read DATAREADY
   // Serial.println(*(int*)(0x4000C000 + 0x100));
   // delay(5000);

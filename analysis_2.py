@@ -194,7 +194,7 @@ def density_plots(arrs, length=0, fname="figs/density_plots.png", i=1):
     plt.clf()
 
 
-def chip_topology_plots(mbdata):
+def chip_topology_plots(mbdata, dir="figs/chip_layouts", rl=0):
     mb_exp_bit_vals = np.sum(mbdata.astype(np.float), axis=0).reshape(1, -1) / len(mbdata[:, 0])
     # mb_exp_bit_vals[:,~volatile_bits_mask] = None
     total_bits = mb_exp_bit_vals.shape[1]
@@ -215,7 +215,7 @@ def chip_topology_plots(mbdata):
               }
     blue_red1 = mpl.colors.LinearSegmentedColormap('BlueRed1', cdict1)
     plt.rcParams['axes.facecolor'] = 'white'
-
+    if rl > 0: factor_list = [rl]
     for factor in factor_list[:]:
         image = mb_exp_bit_vals.reshape(factor, -1)
         fig, ax = plt.subplots()
@@ -225,7 +225,8 @@ def chip_topology_plots(mbdata):
                         interpolation='nearest',
                         vmin=0, vmax=1)
         fig.colorbar(im)
-        plt.savefig("figs/chip_layouts/{0}-rows.png".format(factor))
+        if rl == 0: plt.savefig("{1}/{0}-rows.png".format(factor, dir))
+        else: plt.savefig("{1}-mb{0}-rows.png".format(factor, dir))
 
 
 def chip_fingerprints(mbdatas):
@@ -275,6 +276,10 @@ if __name__ == "__main__":
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
     for i in range(20):
+<<<<<<< HEAD
+=======
+        print("mb {0} started..".format(i + 1))
+>>>>>>> 23256065ac8c5dc2b846aad8cf121557e21efbb6
         # train the detector on a microbit
         rounded_exp_values_mb1, mb1_weightings, x = PUF_train(all_mb_data[i][:, volatile_bits_mask])
 
@@ -282,17 +287,24 @@ if __name__ == "__main__":
         all_mb_dists = []
         for mbtedata in all_mb_data:
             mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+
             all_mb_dists.append(mb_dists)
 
         print(all_mb_dists[3])
 
         ## plot the weighted hamming distances between the test microbit and expected values
+<<<<<<< HEAD
         density_plots(all_mb_dists, len(volatile_bits_mask[volatile_bits_mask==True]), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
         print(i+1)
+=======
+        density_plots(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
+>>>>>>> 23256065ac8c5dc2b846aad8cf121557e21efbb6
 
 
-    ## plot images of expected values for different chip layouts
-    # chip_topology_plots(mb5trdata)
+        ## plot images of expected values for different chip layouts
+        # try: os.mkdir("figs/chip_layouts/mb{0}_chip_layouts".format(i+1))
+        # except: pass
+        # chip_topology_plots(all_mb_data[i], dir="figs/chip_layouts/mb{0}_chip_layouts".format(i+1), rl = 16384)
 
     ## plot the expected values for each of the microbits in the database linearly
     # chip_fingerprints(all_mb_data)

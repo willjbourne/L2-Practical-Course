@@ -89,7 +89,7 @@ def PUF_train(trdata):
     ## work out the expected std for microbit 1
     tr_dists = get_weighted_hamming_distances(trdata, rounded_expec_vals, weightings)
     expec_std = np.sqrt(np.sum((tr_dists - exp_hamming_dist)**2) / len(tr_dists)-1)
-    Z = 3.4  # to give 99.97% certainty
+    Z = 10
     x = Z * expec_std + exp_hamming_dist
 
     return rounded_expec_vals, weightings, x
@@ -122,12 +122,16 @@ training_info_database = load("temp/training_info_database.npy")
 i, found = 0, False
 for tri in training_info_database: # [expected value arrays, weightings, x]
     mbq_dists = get_weighted_hamming_distances(mbq[:, volatile_bits_mask], tri[0], tri[1]) # expected value arrays, weightings
-    if np.mean(mbq_dists) <= tri[2]: # tri[2]: x
-        correct_mb_str = [f for f in os.listdir("data/mb_database") if not f.startswith('.')][i]
+    mb_str = [f for f in os.listdir("data/mb_database") if not f.startswith('.')][i]
 
+    # print("testing microbit {0}\n"
+    #       "hamming distance(s): {1}\n"
+    #       "x: {2}".format(mb_str, np.round(mbq_dists), round(tri[2])))
+
+    if np.mean(mbq_dists) <= tri[2]: # tri[2]: x
         print("microbit linked to fingerprint: {0}\n"
               "hamming distance(s): {1}\n"
-              "x: {2}".format(correct_mb_str, np.round(mbq_dists), round(tri[2])))
+              "x: {2}".format(mb_str, np.round(mbq_dists), round(tri[2])))
         found = True
     i += 1
 

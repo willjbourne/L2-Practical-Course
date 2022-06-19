@@ -1,4 +1,4 @@
-device = serialport("/dev/tty.usbmodem142302", 115200);
+device = serialport("/dev/tty.usbmodem141302", 115200);
 device.Timeout = 5;
 out = read(device, 999999, 'uint8');
 temp = out(1:4);

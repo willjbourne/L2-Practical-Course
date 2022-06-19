@@ -354,31 +354,67 @@ if __name__ == "__main__":
     # mask of all bits that do change between microbits
     volatile_bits_mask = ~load("temp/global_const_bits.npy").reshape(-1)
 
+    all_intra_hamming_distances = []
+    inter_mb_datasets = []
+    for mb in all_mb_data:
+
+        intra_hamming_distances, intra_combinations = hamming_distance_combinations(mb)
+        all_intra_hamming_distances.extend(intra_hamming_distances)
+
+        inter_mb_datasets.append(mb[0,:])
+
+    all_inter_hamming_distances, inter_combinations = hamming_distance_combinations(np.array(inter_mb_datasets))
+
+
+    plt.hist(np.sort(all_intra_hamming_distances), density=True, color="lightblue")
+    plt.hist(np.sort(all_inter_hamming_distances), density=True, color="lightgreen")
+
+    # get normal distribution
+    mu1, std1 = norm.fit(all_intra_hamming_distances)
+    mu2, std2 = norm.fit(all_inter_hamming_distances)
+
+    # Plot the PDF.
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 100)
+    p1 = norm.pdf(x, mu1, std1)
+    p2 = norm.pdf(x, mu2, std2)
+    plt.plot(x, p1, 'k', linewidth=2, color="blue")
+    plt.plot(x, p2, 'k', linewidth=2, color="green")
+
+    plt.xlim([xmin, xmax])
+    plt.xlabel("Hamming Distance")
+    plt.ylabel("Frequency Density")
+    plt.legend(["intra-chip hamming distances", "inter-chip hamming distances"])
+    plt.savefig("figs/PUF_viability.pdf")
+    print("mean1:", mu1, "std1: ", std1)
+    print("mean2:", mu2, "std2: ", std2)
+
+
+
+
+    """
     for i in range(len(all_mb_data)):
         print("mb {0} started..".format(i + 1))
-        # train the detector on a microbit
-        rounded_exp_values_mb1, mb1_weightings, x = PUF_train(all_mb_data[i][:, volatile_bits_mask])
 
-        # get hamming distances for all the microbits
-        all_mb_dists = []
-        for mbtedata in all_mb_data:
-            mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+        ## train the detector on a microbit
+        # rounded_exp_values_mb1, mb1_weightings, x = PUF_train(all_mb_data[i][:, volatile_bits_mask])
 
-            all_mb_dists.append(mb_dists)
+        ## get hamming distances for all the microbits
+        # all_mb_dists = []
+        # for mbtedata in all_mb_data:
+        #     mb_dists = get_weighted_hamming_distances(mbtedata[:, volatile_bits_mask], rounded_exp_values_mb1, mb1_weightings)
+        #     all_mb_dists.append(mb_dists)
 
         ## plot the weighted hamming distances between the test microbit and expected values
-        density_plots(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
-
-        inter_intra_chip_ham_dists(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/inter_hamming_plots/base_mb_{0}.png".format(i+1), i+1)
+        # density_plots(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/density_plots/base_mb_{0}.png".format(i+1), i+1)
+        # inter_intra_chip_ham_dists(all_mb_dists, np.sum(volatile_bits_mask.astype(int)), "figs/inter_hamming_plots/base_mb_{0}.png".format(i+1), i+1)
 
         ## plot images of expected values for different chip layouts
         # try: os.mkdir("figs/chip_layouts/mb{0}_chip_layouts".format(i+1))
         # except: pass
         # chip_topology_plots(all_mb_data[i], dir="figs/chip_layouts/mb{0}_chip_layouts".format(i+1), rl = 16384)
-
+    """
     ## plot the expected values for each of the microbits in the database linearly
     # chip_fingerprints(all_mb_data)
-
-
 
     print("Time Elapsed: {0}s".format(round(time.time()-start_time, 2)))

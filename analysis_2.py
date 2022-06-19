@@ -357,7 +357,7 @@ if __name__ == "__main__":
     all_intra_hamming_distances = []
     inter_mb_datasets = []
     for mb in all_mb_data:
-
+        # mb = mb[:, volatile_bits_mask]
         intra_hamming_distances, intra_combinations = hamming_distance_combinations(mb)
         all_intra_hamming_distances.extend(intra_hamming_distances)
 
@@ -366,8 +366,12 @@ if __name__ == "__main__":
     all_inter_hamming_distances, inter_combinations = hamming_distance_combinations(np.array(inter_mb_datasets))
 
 
-    plt.hist(np.sort(all_intra_hamming_distances), density=True, color="lightblue")
-    plt.hist(np.sort(all_inter_hamming_distances), density=True, color="lightgreen")
+    all_intra_hamming_distances = np.array(all_intra_hamming_distances) / len(mb[0,:])
+    all_inter_hamming_distances = np.array(all_inter_hamming_distances) / len(mb[0,:])
+
+
+    plt.hist(np.sort(all_intra_hamming_distances), density=True, bins=75, color="lightblue")
+    plt.hist(np.sort(all_inter_hamming_distances), density=True, bins=75, color="lightgreen")
 
     # get normal distribution
     mu1, std1 = norm.fit(all_intra_hamming_distances)
@@ -382,7 +386,7 @@ if __name__ == "__main__":
     plt.plot(x, p2, 'k', linewidth=2, color="green")
 
     plt.xlim([xmin, xmax])
-    plt.xlabel("Hamming Distance")
+    plt.xlabel("Hamming Distance Per Bit")
     plt.ylabel("Frequency Density")
     plt.legend(["intra-chip hamming distances", "inter-chip hamming distances"])
     plt.savefig("figs/PUF_viability.pdf")

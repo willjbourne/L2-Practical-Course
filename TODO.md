@@ -19,3 +19,13 @@
 
 ---
 1. looking for repeating patterns in the bitsteams: placing bits in 64-bit groups -> banding pattern -> explore this
+
+
+## Report Edits?
+
+- device vs. chip?
+- swap order of theory Hamming dists & PUF Viability
+- ". The similarity between pairs of bit sequences was
+measured using their hamming distan" in Method/ rephrase this?
+- combine Hamming dists & Weighted hamming distances before PUF Viability
+- unique identifier section formulae need changing etc... have a look in context from prev. section
